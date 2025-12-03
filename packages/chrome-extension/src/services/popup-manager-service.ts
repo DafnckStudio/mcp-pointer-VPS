@@ -5,6 +5,8 @@ import ConfigStorageService from './config-storage-service';
 export default class PopupManagerService {
   private enabledInput: HTMLInputElement;
 
+  private hostInput: HTMLInputElement;
+
   private portInput: HTMLInputElement;
 
   private saveBtn: HTMLButtonElement;
@@ -15,6 +17,7 @@ export default class PopupManagerService {
 
   constructor() {
     this.enabledInput = document.getElementById('enabled') as HTMLInputElement;
+    this.hostInput = document.getElementById('host') as HTMLInputElement;
     this.portInput = document.getElementById('port') as HTMLInputElement;
     this.saveBtn = document.getElementById('saveBtn') as HTMLButtonElement;
     this.resetBtn = document.getElementById('resetBtn') as HTMLButtonElement;
@@ -34,6 +37,7 @@ export default class PopupManagerService {
       const config = await ConfigStorageService.load();
 
       this.enabledInput.checked = config.enabled;
+      this.hostInput.value = config.websocket.host || 'localhost';
       this.portInput.value = config.websocket.port.toString();
     } catch (error) {
       this.showStatus('Failed to load configuration', 'error');
@@ -43,6 +47,12 @@ export default class PopupManagerService {
 
   private async saveConfig(): Promise<void> {
     try {
+      const host = this.hostInput.value.trim();
+      if (!host) {
+        this.showStatus('Host cannot be empty', 'error');
+        return;
+      }
+
       const port = parseInt(this.portInput.value, 10);
       if (isNaN(port) || port < 1 || port > 65535) {
         this.showStatus('Port must be a number between 1 and 65535', 'error');
@@ -52,6 +62,7 @@ export default class PopupManagerService {
       const config: ExtensionConfig = {
         enabled: this.enabledInput.checked,
         websocket: {
+          host,
           port,
         },
         logger: {
@@ -61,7 +72,7 @@ export default class PopupManagerService {
       };
 
       await ConfigStorageService.save(config);
-      this.showStatus('Settings saved successfully', 'success');
+      this.showStatus(`Settings saved (${host}:${port})`, 'success');
     } catch (error) {
       this.showStatus('Failed to save configuration', 'error');
       logger.error('Error saving config:', error);

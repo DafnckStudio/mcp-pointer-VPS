@@ -20,6 +20,12 @@
       </div>
 
       <div class="field-group">
+        <label for="host" class="field-label">MCP Server Host</label>
+        <input type="text" id="host" class="field-input" placeholder="localhost">
+        <span class="field-hint">Host/IP address (use VPS IP for remote, 'localhost' for local)</span>
+      </div>
+
+      <div class="field-group">
         <label for="port" class="field-label">MCP Server Port</label>
         <input type="number" id="port" class="field-input" min="1" max="65535" placeholder="7007">
         <span class="field-hint">Port for WebSocket connection to MCP server</span>

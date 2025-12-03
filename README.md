@@ -135,6 +135,65 @@ Your AI tool will automatically start the MCP server when needed using the `npx 
 - ✅ **Chrome** - Full support (tested)
 - 🟡 **Chromium-based browsers** - Should work (Edge, Brave, Arc - load built extension manually)
 
+## 🌍 Remote VPS Setup (SSH Coding)
+
+**NEW!** MCP Pointer now supports connecting to a remote MCP server on a VPS. This is perfect for developers who:
+- Code on a remote VPS via SSH (e.g., with Claude Code)
+- Browse on their local machine (Mac/Windows)
+- Want to point at elements locally and have the data sent to the remote server
+
+### How It Works
+
+```
+┌──────────────────┐         WebSocket          ┌──────────────────┐
+│   Your Browser   │ ───────────────────────▶  │   VPS Server     │
+│   (Mac/Windows)  │     ws://VPS_IP:7007       │   (MCP Server)   │
+│                  │                            │                  │
+│  Chrome Extension│                            │  Claude Code     │
+│  Option+Click    │                            │  receives data   │
+└──────────────────┘                            └──────────────────┘
+```
+
+### Setup
+
+#### 1. On your VPS
+
+```bash
+# Open the WebSocket port (restricted to your IP for security)
+sudo ufw allow from YOUR_LOCAL_IP to any port 7007
+
+# Start the MCP server
+npx -y @mcp-pointer/server start
+```
+
+#### 2. On your local machine (Chrome Extension)
+
+1. Click the MCP Pointer extension icon
+2. Change **Host** from `localhost` to your VPS IP (e.g., `72.61.197.216`)
+3. Keep **Port** as `7007` (or your custom port)
+4. Click **Save Settings**
+
+#### 3. Test it!
+
+1. Navigate to any webpage on your local browser
+2. `Option+Click` on an element
+3. In Claude Code on your VPS, use the `get-pointed-element` tool
+4. 🎉 You should see the element data!
+
+### Security Considerations
+
+- **Always restrict the port** to your IP: `sudo ufw allow from YOUR_IP to any port 7007`
+- **Never** open port 7007 to `0.0.0.0/0` (the entire internet)
+- The WebSocket connection is **unencrypted** (ws://, not wss://)
+- For production use, consider setting up a reverse proxy with SSL
+
+### Troubleshooting Remote Connection
+
+1. **Check firewall**: `sudo ufw status | grep 7007`
+2. **Check server is running**: `netstat -tlpn | grep 7007`
+3. **Test connectivity**: `curl http://VPS_IP:7007` (should timeout, but confirms port is open)
+4. **Check extension settings**: Verify Host is set to VPS IP, not `localhost`
+
 ## 🐛 Troubleshooting
 
 ### Extension Not Connecting

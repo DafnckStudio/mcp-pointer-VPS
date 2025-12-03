@@ -3,6 +3,7 @@ import { LogLevel } from '@mcp-pointer/shared/logger';
 export interface ExtensionConfig {
   enabled: boolean;
   websocket: {
+    host: string; // Remote host (IP or hostname) - 'localhost' for local, VPS IP for remote
     port: number;
   };
   logger: {
@@ -14,6 +15,7 @@ export interface ExtensionConfig {
 const config: ExtensionConfig = {
   enabled: true,
   websocket: {
+    host: 'localhost', // Default to localhost, user can change to VPS IP
     port: 7007,
   },
   logger: {

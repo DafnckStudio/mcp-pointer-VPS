@@ -16,6 +16,7 @@ async function initialize() {
 
   logger.info('🚀 MCP Pointer background script loaded', {
     enabled: currentConfig.enabled,
+    host: currentConfig.websocket.host,
     port: currentConfig.websocket.port,
   });
 }
@@ -38,9 +39,10 @@ ConfigStorageService.onChange((newConfig: ExtensionConfig) => {
 chrome.runtime.onMessage
   .addListener((request: any, _sender: any, sendResponse: (response: any) => void) => {
     if (request.type === 'DOM_ELEMENT_POINTED' && request.data) {
-      // Send element with current port and status callback
+      // Send element with current host, port and status callback
       elementSender.sendElement(
         request.data,
+        currentConfig.websocket.host,
         currentConfig.websocket.port,
         (status, error) => {
           // Status flow: CONNECTING -> CONNECTED -> SENDING -> SENT

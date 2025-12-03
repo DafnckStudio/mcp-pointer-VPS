@@ -9,6 +9,8 @@ export type StatusCallback = (status: ConnectionStatus, error?: string) => void;
 export class ElementSenderService {
   private ws: ReconnectingWebSocket | null = null;
 
+  private currentHost: string | null = null;
+
   private currentPort: number | null = null;
 
   private idleTimeout: NodeJS.Timeout | null = null;
@@ -27,6 +29,7 @@ export class ElementSenderService {
 
   async sendElement(
     element: RawPointedDOMElement,
+    host: string,
     port: number,
     statusCallback?: StatusCallback,
   ): Promise<void> {
@@ -35,7 +38,7 @@ export class ElementSenderService {
       this.clearIdleTimer();
 
       // Ensure we have a connection
-      const connected = await this.ensureConnection(port, statusCallback);
+      const connected = await this.ensureConnection(host, port, statusCallback);
       if (!connected) return;
 
       // Start idle timer just before sending
@@ -61,42 +64,51 @@ export class ElementSenderService {
     }
   }
 
-  private handlePortChange(port: number, statusCallback?: StatusCallback): boolean {
+  private handleConnectionChange(host: string, port: number, statusCallback?: StatusCallback): boolean {
+    if (!host || host.trim() === '') {
+      statusCallback?.(ConnectionStatus.ERROR, 'Invalid host');
+      return false;
+    }
+
     if (!port || port <= 0 || port > 65535) {
       statusCallback?.(ConnectionStatus.ERROR, 'Invalid port number');
       return false;
     }
 
-    const portInitialization = this.currentPort === null;
+    const isInitialization = this.currentHost === null && this.currentPort === null;
 
-    if (portInitialization) {
+    if (isInitialization) {
+      this.currentHost = host;
       this.currentPort = port;
       return true;
     }
 
+    const hostChanged = this.currentHost !== host;
     const portChanged = this.currentPort !== port;
 
-    // Check if port changed - if so, disconnect old connection
-    if (portChanged) {
-      logger.info(`Port changed from ${this.currentPort} to ${port}, reconnecting...`);
+    // Check if host or port changed - if so, disconnect old connection
+    if (hostChanged || portChanged) {
+      logger.info(`Connection changed from ${this.currentHost}:${this.currentPort} to ${host}:${port}, reconnecting...`);
       this.disconnect();
+      this.currentHost = host;
       this.currentPort = port;
     }
 
     return true;
   }
 
-  private async ensureConnection(port: number, statusCallback?: StatusCallback): Promise<boolean> {
-    // Handle port change or initialization
-    const portHandled = this.handlePortChange(port, statusCallback);
-    if (!portHandled) return false;
+  private async ensureConnection(host: string, port: number, statusCallback?: StatusCallback): Promise<boolean> {
+    // Handle host/port change or initialization
+    const connectionHandled = this.handleConnectionChange(host, port, statusCallback);
+    if (!connectionHandled) return false;
 
     // Create connection if needed
     if (!this.isConnected) {
       statusCallback?.(ConnectionStatus.CONNECTING);
 
       // Create ReconnectingWebSocket with options
-      this.ws = new ReconnectingWebSocket(`ws://localhost:${port}`, [], {
+      // Use configured host instead of hardcoded 'localhost' for remote VPS support
+      this.ws = new ReconnectingWebSocket(`ws://${host}:${port}`, [], {
         maxReconnectionDelay: this.MAX_RECONNECTION_DELAY,
         minReconnectionDelay: this.MIN_RECONNECTION_DELAY,
         reconnectionDelayGrowFactor: this.RECONNECTION_DELAY_GROW_FACTOR,
@@ -109,7 +121,7 @@ export class ElementSenderService {
       // Wait for connection to open
       const connected = await this.waitForConnection();
       if (!connected) {
-        statusCallback?.(ConnectionStatus.ERROR, 'Connection timeout');
+        statusCallback?.(ConnectionStatus.ERROR, `Connection timeout to ${host}:${port}`);
         this.disconnect();
         return false;
       }
