@@ -42,41 +42,13 @@ export interface ExtensionConfig {
  * Default routes for common development ports
  * Maps dev server ports to MCP server ports
  */
-const defaultRoutes: RouteConfig[] = [
-  {
-    id: 'dentistry',
-    name: 'DentistryGPT',
-    pattern: '22002',
-    patternType: 'port',
-    host: '72.61.197.216',
-    port: 7022,
-    enabled: true,
-  },
-  {
-    id: 'kommu',
-    name: 'Kommu',
-    pattern: '33001',
-    patternType: 'port',
-    host: '72.61.197.216',
-    port: 7033,
-    enabled: true,
-  },
-  {
-    id: 'gluten-libre',
-    name: 'Gluten-Libre',
-    pattern: '22001',
-    patternType: 'port',
-    host: '72.61.197.216',
-    port: 7021,
-    enabled: true,
-  },
-];
+const defaultRoutes: RouteConfig[] = [];
 
 const config: ExtensionConfig = {
   enabled: true,
   autoRouting: true,
   websocket: {
-    host: '72.61.197.216',
+    host: 'localhost',
     port: 7007,
   },
   routes: defaultRoutes,

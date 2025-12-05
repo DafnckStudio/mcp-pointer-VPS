@@ -94,7 +94,7 @@ export default class PopupManagerService {
 
       this.enabledInput.checked = this.currentConfig.enabled;
       this.autoRoutingInput.checked = this.currentConfig.autoRouting;
-      this.hostInput.value = this.currentConfig.websocket.host || '72.61.197.216';
+      this.hostInput.value = this.currentConfig.websocket.host || 'localhost';
       this.portInput.value = this.currentConfig.websocket.port.toString();
 
       this.renderRoutes();
