@@ -2,7 +2,8 @@ import { LogLevel } from '@mcp-pointer/shared/logger';
 
 /**
  * Route configuration for URL-based routing
- * Maps URL patterns to specific WebSocket endpoints
+ * Maps URL patterns to MCP server ports
+ * Host is automatically extracted from the browser URL
  */
 export interface RouteConfig {
   /** Unique identifier for this route */
@@ -13,10 +14,8 @@ export interface RouteConfig {
   pattern: string;
   /** Pattern type: 'port' matches :PORT in URL, 'contains' matches substring, 'regex' for advanced */
   patternType: 'port' | 'contains' | 'regex';
-  /** WebSocket host to send to */
-  host: string;
-  /** WebSocket port to send to */
-  port: number;
+  /** MCP server port to connect to (host is auto-detected from URL) */
+  mcpPort: number;
   /** Whether this route is enabled */
   enabled: boolean;
 }
@@ -106,4 +105,18 @@ export function findMatchingRoute(url: string, routes: RouteConfig[]): RouteConf
  */
 export function generateRouteId(): string {
   return `route-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+}
+
+/**
+ * Extract host from a URL
+ * @param url The URL to extract host from
+ * @returns The hostname/IP or null if invalid
+ */
+export function extractHostFromUrl(url: string): string | null {
+  try {
+    const urlObj = new URL(url);
+    return urlObj.hostname;
+  } catch {
+    return null;
+  }
 }

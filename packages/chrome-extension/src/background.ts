@@ -1,7 +1,7 @@
 import { ConnectionStatus } from '@mcp-pointer/shared/types';
 import logger from './utils/logger';
 import { ElementSenderService } from './services/element-sender-service';
-import { ExtensionConfig, findMatchingRoute, RouteConfig } from './utils/config';
+import { ExtensionConfig, findMatchingRoute, RouteConfig, extractHostFromUrl } from './utils/config';
 import ConfigStorageService from './services/config-storage-service';
 
 let elementSender: ElementSenderService;
@@ -27,9 +27,9 @@ async function initialize() {
 
   // Log available routes
   if (currentConfig.autoRouting && currentConfig.routes.length > 0) {
-    logger.info('📍 Available routes:');
+    logger.info('📍 Available routes (host auto-detected from URL):');
     currentConfig.routes.forEach((route) => {
-      logger.info(`   ${route.enabled ? '✓' : '✗'} ${route.name}: :${route.pattern} → ${route.host}:${route.port}`);
+      logger.info(`   ${route.enabled ? '✓' : '✗'} ${route.name}: :${route.pattern} → MCP port ${route.mcpPort}`);
     });
   }
 }
@@ -53,12 +53,17 @@ ConfigStorageService.onChange((newConfig: ExtensionConfig) => {
 
 /**
  * Determine the WebSocket endpoint based on URL and routing config
+ * Host is automatically extracted from the URL
  */
 function getEndpointForUrl(url: string): { host: string; port: number; route: RouteConfig | null } {
+  // Extract host from URL automatically
+  const extractedHost = extractHostFromUrl(url);
+  const host = extractedHost || currentConfig.websocket.host;
+
   if (!currentConfig.autoRouting) {
-    // Auto-routing disabled - use default
+    // Auto-routing disabled - use default port with extracted host
     return {
-      host: currentConfig.websocket.host,
+      host,
       port: currentConfig.websocket.port,
       route: null,
     };
@@ -67,16 +72,17 @@ function getEndpointForUrl(url: string): { host: string; port: number; route: Ro
   const matchedRoute = findMatchingRoute(url, currentConfig.routes);
 
   if (matchedRoute) {
+    // Use extracted host + route's MCP port
     return {
-      host: matchedRoute.host,
-      port: matchedRoute.port,
+      host,
+      port: matchedRoute.mcpPort,
       route: matchedRoute,
     };
   }
 
-  // No route matched - use default
+  // No route matched - use extracted host + default port
   return {
-    host: currentConfig.websocket.host,
+    host,
     port: currentConfig.websocket.port,
     route: null,
   };
@@ -141,7 +147,7 @@ chrome.runtime.onMessage
       const tabId = request.tabId;
       const route = tabId ? activeRoutes.get(tabId) : null;
       sendResponse({
-        route: route ? { name: route.name, host: route.host, port: route.port } : null,
+        route: route ? { name: route.name, mcpPort: route.mcpPort } : null,
         config: {
           enabled: currentConfig.enabled,
           autoRouting: currentConfig.autoRouting,

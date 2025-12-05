@@ -109,16 +109,10 @@
           </select>
         </div>
 
-        <div class="field-row">
-          <div class="field-group">
-            <label for="routeHost" class="field-label">MCP Host</label>
-            <input type="text" id="routeHost" class="field-input" placeholder="72.61.197.216" required>
-          </div>
-
-          <div class="field-group">
-            <label for="routePort" class="field-label">MCP Port</label>
-            <input type="number" id="routePort" class="field-input" min="1" max="65535" placeholder="7022" required>
-          </div>
+        <div class="field-group">
+          <label for="routeMcpPort" class="field-label">MCP Server Port</label>
+          <input type="number" id="routeMcpPort" class="field-input" min="1" max="65535" placeholder="7022" required>
+          <span class="field-hint">Host is auto-detected from URL</span>
         </div>
 
         <div class="button-group">

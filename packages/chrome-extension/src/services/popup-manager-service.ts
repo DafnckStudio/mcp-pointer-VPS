@@ -21,8 +21,7 @@ export default class PopupManagerService {
   private routeNameInput: HTMLInputElement;
   private routePatternInput: HTMLInputElement;
   private routePatternTypeSelect: HTMLSelectElement;
-  private routeHostInput: HTMLInputElement;
-  private routePortInput: HTMLInputElement;
+  private routeMcpPortInput: HTMLInputElement;
   private closeModalBtn: HTMLButtonElement;
   private cancelRouteBtn: HTMLButtonElement;
 
@@ -55,8 +54,7 @@ export default class PopupManagerService {
     this.routeNameInput = document.getElementById('routeName') as HTMLInputElement;
     this.routePatternInput = document.getElementById('routePattern') as HTMLInputElement;
     this.routePatternTypeSelect = document.getElementById('routePatternType') as HTMLSelectElement;
-    this.routeHostInput = document.getElementById('routeHost') as HTMLInputElement;
-    this.routePortInput = document.getElementById('routePort') as HTMLInputElement;
+    this.routeMcpPortInput = document.getElementById('routeMcpPort') as HTMLInputElement;
     this.closeModalBtn = document.getElementById('closeModal') as HTMLButtonElement;
     this.cancelRouteBtn = document.getElementById('cancelRoute') as HTMLButtonElement;
 
@@ -117,7 +115,7 @@ export default class PopupManagerService {
           <div class="route-name">${this.escapeHtml(route.name)}</div>
           <div class="route-details">
             <span class="route-pattern">:${route.pattern}</span>
-            <span>${route.host}:${route.port}</span>
+            <span>→ MCP :${route.mcpPort}</span>
           </div>
         </div>
         <div class="route-actions">
@@ -199,7 +197,6 @@ export default class PopupManagerService {
     this.editingRouteId = null;
     this.modalTitle.textContent = 'Add Route';
     this.routeForm.reset();
-    this.routeHostInput.value = this.currentConfig.websocket.host;
     this.modal.classList.add('visible');
   }
 
@@ -212,8 +209,7 @@ export default class PopupManagerService {
     this.routeNameInput.value = route.name;
     this.routePatternInput.value = route.pattern;
     this.routePatternTypeSelect.value = route.patternType;
-    this.routeHostInput.value = route.host;
-    this.routePortInput.value = route.port.toString();
+    this.routeMcpPortInput.value = route.mcpPort.toString();
     this.modal.classList.add('visible');
   }
 
@@ -228,10 +224,9 @@ export default class PopupManagerService {
     const name = this.routeNameInput.value.trim();
     const pattern = this.routePatternInput.value.trim();
     const patternType = this.routePatternTypeSelect.value as 'port' | 'contains' | 'regex';
-    const host = this.routeHostInput.value.trim();
-    const port = parseInt(this.routePortInput.value, 10);
+    const mcpPort = parseInt(this.routeMcpPortInput.value, 10);
 
-    if (!name || !pattern || !host || isNaN(port)) {
+    if (!name || !pattern || isNaN(mcpPort)) {
       this.showStatus('Please fill all fields', 'error');
       return;
     }
@@ -240,7 +235,7 @@ export default class PopupManagerService {
       // Update existing route
       const newRoutes = this.currentConfig.routes.map((route) =>
         route.id === this.editingRouteId
-          ? { ...route, name, pattern, patternType, host, port }
+          ? { ...route, name, pattern, patternType, mcpPort }
           : route
       );
       this.currentConfig = { ...this.currentConfig, routes: newRoutes };
@@ -251,8 +246,7 @@ export default class PopupManagerService {
         name,
         pattern,
         patternType,
-        host,
-        port,
+        mcpPort,
         enabled: true,
       };
       this.currentConfig = {

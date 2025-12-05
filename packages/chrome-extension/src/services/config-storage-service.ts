@@ -2,23 +2,45 @@ import defaultConfig, { ExtensionConfig, RouteConfig } from '../utils/config';
 import logger from '../utils/logger';
 
 const STORAGE_KEY = 'mcp_pointer_config';
-const CONFIG_VERSION = 2; // Increment when config structure changes
+const CONFIG_VERSION = 3; // Increment when config structure changes
 
 interface StoredConfig extends ExtensionConfig {
   _version?: number;
 }
 
 /**
+ * Migrate old route format (host + port) to new format (mcpPort only)
+ * Host is now auto-detected from URL
+ */
+function migrateRoute(route: any): RouteConfig {
+  // Already has mcpPort - new format
+  if ('mcpPort' in route) {
+    return route;
+  }
+
+  // Old format with host and port - migrate to mcpPort
+  logger.info(`🔄 Migrating route "${route.name}" to auto-host format`);
+  return {
+    id: route.id,
+    name: route.name,
+    pattern: route.pattern,
+    patternType: route.patternType,
+    mcpPort: route.port, // Use old port as mcpPort
+    enabled: route.enabled,
+  };
+}
+
+/**
  * Migrate old config format to new format with routes
  */
 function migrateConfig(stored: any): ExtensionConfig {
-  // Already has routes - just ensure it has all fields
+  // Already has routes - migrate routes if needed
   if (stored.routes && Array.isArray(stored.routes)) {
     return {
       enabled: stored.enabled ?? defaultConfig.enabled,
       autoRouting: stored.autoRouting ?? defaultConfig.autoRouting,
       websocket: stored.websocket ?? defaultConfig.websocket,
-      routes: stored.routes,
+      routes: stored.routes.map(migrateRoute),
       logger: stored.logger ?? defaultConfig.logger,
     };
   }
