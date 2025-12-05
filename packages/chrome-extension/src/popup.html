@@ -7,39 +7,128 @@
 <body>
   <div class="container">
     <header class="header">
-      <h1>MCP Pointer Settings</h1>
+      <h1>MCP Pointer</h1>
+      <span class="badge badge-multi">Multi-Instance</span>
     </header>
-    
+
+    <!-- Current Status -->
+    <div class="current-status" id="currentStatus">
+      <div class="status-label">Current Tab Route</div>
+      <div class="status-value" id="activeRoute">Detecting...</div>
+    </div>
+
     <form class="config-form">
-      <div class="field-group">
-        <label class="toggle-label">
-          <input type="checkbox" id="enabled" class="toggle-input">
-          <span class="toggle-slider"></span>
-          <span class="toggle-text">Extension Enabled</span>
-        </label>
+      <!-- Global Settings -->
+      <div class="section">
+        <div class="section-header">Global Settings</div>
+
+        <div class="field-group">
+          <label class="toggle-label">
+            <input type="checkbox" id="enabled" class="toggle-input">
+            <span class="toggle-slider"></span>
+            <span class="toggle-text">Extension Enabled</span>
+          </label>
+        </div>
+
+        <div class="field-group">
+          <label class="toggle-label">
+            <input type="checkbox" id="autoRouting" class="toggle-input">
+            <span class="toggle-slider"></span>
+            <span class="toggle-text">Auto-Routing by URL</span>
+          </label>
+          <span class="field-hint">Automatically route to MCP server based on URL port</span>
+        </div>
       </div>
 
-      <div class="field-group">
-        <label for="host" class="field-label">MCP Server Host</label>
-        <input type="text" id="host" class="field-input" placeholder="localhost">
-        <span class="field-hint">Host/IP address (use VPS IP for remote, 'localhost' for local)</span>
+      <!-- Routes Section -->
+      <div class="section">
+        <div class="section-header">
+          Routes
+          <button type="button" id="addRouteBtn" class="btn-icon" title="Add Route">+</button>
+        </div>
+
+        <div id="routesList" class="routes-list">
+          <!-- Routes will be populated by JS -->
+        </div>
       </div>
 
-      <div class="field-group">
-        <label for="port" class="field-label">MCP Server Port</label>
-        <input type="number" id="port" class="field-input" min="1" max="65535" placeholder="7007">
-        <span class="field-hint">Port for WebSocket connection to MCP server</span>
+      <!-- Default Fallback -->
+      <div class="section collapsed" id="defaultSection">
+        <div class="section-header collapsible" id="toggleDefault">
+          Default Endpoint
+          <span class="collapse-icon">▼</span>
+        </div>
+
+        <div class="section-content" id="defaultContent">
+          <div class="field-group">
+            <label for="host" class="field-label">Host</label>
+            <input type="text" id="host" class="field-input" placeholder="72.61.197.216">
+          </div>
+
+          <div class="field-group">
+            <label for="port" class="field-label">Port</label>
+            <input type="number" id="port" class="field-input" min="1" max="65535" placeholder="7007">
+          </div>
+          <span class="field-hint">Used when no route matches</span>
+        </div>
       </div>
 
       <div class="button-group">
-        <button type="button" id="saveBtn" class="btn btn-primary">Save Settings</button>
-        <button type="button" id="resetBtn" class="btn btn-secondary">Reset to Defaults</button>
+        <button type="button" id="saveBtn" class="btn btn-primary">Save</button>
+        <button type="button" id="resetBtn" class="btn btn-secondary">Reset</button>
       </div>
     </form>
 
     <div class="status" id="status"></div>
   </div>
-  
+
+  <!-- Route Edit Modal -->
+  <div class="modal" id="routeModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle">Add Route</h2>
+        <button type="button" class="modal-close" id="closeModal">&times;</button>
+      </div>
+      <form id="routeForm">
+        <div class="field-group">
+          <label for="routeName" class="field-label">Name</label>
+          <input type="text" id="routeName" class="field-input" placeholder="My Project" required>
+        </div>
+
+        <div class="field-group">
+          <label for="routePattern" class="field-label">URL Pattern</label>
+          <input type="text" id="routePattern" class="field-input" placeholder="22002" required>
+        </div>
+
+        <div class="field-group">
+          <label for="routePatternType" class="field-label">Pattern Type</label>
+          <select id="routePatternType" class="field-input">
+            <option value="port">Port (matches :PORT in URL)</option>
+            <option value="contains">Contains (substring match)</option>
+            <option value="regex">Regex (advanced)</option>
+          </select>
+        </div>
+
+        <div class="field-row">
+          <div class="field-group">
+            <label for="routeHost" class="field-label">MCP Host</label>
+            <input type="text" id="routeHost" class="field-input" placeholder="72.61.197.216" required>
+          </div>
+
+          <div class="field-group">
+            <label for="routePort" class="field-label">MCP Port</label>
+            <input type="number" id="routePort" class="field-input" min="1" max="65535" placeholder="7022" required>
+          </div>
+        </div>
+
+        <div class="button-group">
+          <button type="submit" class="btn btn-primary">Save Route</button>
+          <button type="button" id="cancelRoute" class="btn btn-secondary">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script src="popup.js"></script>
 </body>
 </html>
